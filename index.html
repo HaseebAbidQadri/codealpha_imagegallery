@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CodeAlpha Image Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 50%, #667eea 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: 
+                radial-gradient(circle at 20% 80%, rgba(120, 119, 198, 0.3) 0%, transparent 50%),
+                radial-gradient(circle at 80% 20%, rgba(255, 255, 255, 0.1) 0%, transparent 50%),
+                radial-gradient(circle at 40% 40%, rgba(120, 119, 198, 0.2) 0%, transparent 50%);
+            pointer-events: none;
+            z-index: -1;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.15);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 30px;
+            padding: 40px;
+            box-shadow: 
+                0 25px 45px rgba(0, 0, 0, 0.1),
+                inset 0 1px 0 rgba(255, 255, 255, 0.2);
+            position: relative;
+        }
+
+        .logo-container {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: rgba(255, 255, 255, 0.1);
+            padding: 10px 15px;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+
+        .logo-container .logo {
+            width: 40px;
+            height: 40px;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 18px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        .logo-container .logo-text {
+            color: rgba(255, 255, 255, 0.9);
+            font-weight: 600;
+            font-size: 14px;
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .header {
+            text-align: center;
+            margin-bottom: 40px;
+            margin-top: 20px;
+        }
+
+        .header h1 {
+            color: rgba(255, 255, 255, 0.95);
+            font-size: 3rem;
+            margin-bottom: 15px;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4, #45b7d1);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            text-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            font-weight: 700;
+        }
+
+        .header p {
+            color: rgba(255, 255, 255, 0.8);
+            font-size: 1.2rem;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+        }
+
+        .filter-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-bottom: 30px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 12px 24px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            background: rgba(255, 255, 255, 0.1);
+            color: rgba(255, 255, 255, 0.9);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.4s ease;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+            text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+        }
+
+        .filter-btn:hover,
+        .filter-btn.active {
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border-color: transparent;
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.4);
+        }
+
+        .search-container {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .search-input {
+            padding: 15px 25px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-radius: 30px;
+            width: 350px;
+            max-width: 100%;
+            font-size: 16px;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            color: rgba(255, 255, 255, 0.9);
+            text-align: center;
+        }
+
+        .search-input::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #4ecdc4;
+            background: rgba(255, 255, 255, 0.2);
+            box-shadow: 0 0 20px rgba(78, 205, 196, 0.3);
+        }
+
+        .gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .gallery-item {
+            position: relative;
+            overflow: hidden;
+            border-radius: 15px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            aspect-ratio: 1;
+            background: #f0f0f0;
+        }
+
+        .gallery-item:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.2);
+        }
+
+        .gallery-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.3s ease;
+        }
+
+        .gallery-item:hover img {
+            transform: scale(1.1);
+        }
+
+        .gallery-item .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.8), rgba(118, 75, 162, 0.8));
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-direction: column;
+            color: white;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .gallery-item:hover .overlay {
+            opacity: 1;
+        }
+
+        .overlay h3 {
+            font-size: 1.2rem;
+            margin-bottom: 10px;
+        }
+
+        .overlay p {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin-top: 30px;
+        }
+
+        .nav-btn {
+            padding: 15px 30px;
+            background: linear-gradient(135deg, #ff6b6b, #4ecdc4);
+            color: white;
+            border: none;
+            border-radius: 30px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.4s ease;
+            backdrop-filter: blur(10px);
+            box-shadow: 0 8px 25px rgba(255, 107, 107, 0.3);
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 12px 35px rgba(255, 107, 107, 0.4);
+        }
+
+        .nav-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+
+        /* Lightbox Modal */
+        .lightbox {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .lightbox-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+            text-align: center;
+        }
+
+        .lightbox img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 10px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.5);
+        }
+
+        .lightbox-info {
+            color: white;
+            margin-top: 20px;
+        }
+
+        .lightbox-info h3 {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+        }
+
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 40px;
+            color: white;
+            font-size: 40px;
+            cursor: pointer;
+            z-index: 1001;
+            transition: color 0.3s ease;
+        }
+
+        .lightbox-close:hover {
+            color: #667eea;
+        }
+
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            color: white;
+            font-size: 30px;
+            cursor: pointer;
+            padding: 20px;
+            transition: color 0.3s ease;
+            user-select: none;
+        }
+
+        .lightbox-nav:hover {
+            color: #667eea;
+        }
+
+        .lightbox-prev {
+            left: 20px;
+        }
+
+        .lightbox-next {
+            right: 20px;
+        }
+
+        .spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-top: 4px solid #4ecdc4;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Mobile Responsive Updates */
+        @media (max-width: 768px) {
+            .container {
+                padding: 25px;
+                margin: 10px;
+                border-radius: 25px;
+            }
+
+            .logo-container {
+                top: 15px;
+                right: 20px;
+                padding: 8px 12px;
+            }
+
+            .logo-container .logo {
+                width: 35px;
+                height: 35px;
+                font-size: 16px;
+            }
+
+            .logo-container .logo-text {
+                font-size: 12px;
+            }
+
+            .header {
+                margin-top: 40px;
+            }
+
+            .header h1 {
+                font-size: 2.2rem;
+            }
+
+            .header p {
+                font-size: 1rem;
+            }
+
+            .gallery {
+                grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+                gap: 15px;
+            }
+
+            .filter-controls {
+                gap: 8px;
+            }
+
+            .filter-btn {
+                padding: 10px 18px;
+                font-size: 14px;
+            }
+
+            .search-input {
+                width: 280px;
+                padding: 12px 20px;
+            }
+
+            .lightbox-close {
+                top: 10px;
+                right: 20px;
+                font-size: 30px;
+            }
+
+            .lightbox-nav {
+                font-size: 25px;
+                padding: 15px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .gallery {
+                grid-template-columns: 1fr;
+            }
+
+            .navigation {
+                flex-direction: column;
+                align-items: center;
+            }
+
+            .nav-btn {
+                width: 200px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <div class="logo">CA</div>
+            <div class="logo-text">CodeAlpha</div>
+        </div>
+        
+        <div class="header">
+            <h1>🎨 CodeAlpha Gallery</h1>
+            <p>Premium collection of stunning images with advanced filtering and lightbox experience</p>
+        </div>
+
+        <div class="search-container">
+            <input type="text" class="search-input" placeholder="Search images..." id="searchInput">
+        </div>
+
+        <div class="filter-controls">
+            <button class="filter-btn active" data-filter="all">All</button>
+            <button class="filter-btn" data-filter="nature">Nature</button>
+            <button class="filter-btn" data-filter="city">City</button>
+            <button class="filter-btn" data-filter="sports">Sports</button>
+            <button class="filter-btn" data-filter="landmarks">Landmarks</button>
+            <button class="filter-btn" data-filter="villages">Villages</button>
+            <button class="filter-btn" data-filter="people">People</button>
+        </div>
+
+        <div class="loading" id="loading">
+            <div class="spinner"></div>
+            <p>Loading gallery...</p>
+        </div>
+
+        <div class="gallery" id="gallery"></div>
+
+        <div class="navigation">
+            <button class="nav-btn" id="prevPage">← Previous</button>
+            <button class="nav-btn" id="nextPage">Next →</button>
+        </div>
+    </div>
+
+    <!-- Lightbox Modal -->
+    <div class="lightbox" id="lightbox">
+        <span class="lightbox-close" id="lightboxClose">&times;</span>
+        <span class="lightbox-nav lightbox-prev" id="lightboxPrev">&#8249;</span>
+        <span class="lightbox-nav lightbox-next" id="lightboxNext">&#8250;</span>
+        <div class="lightbox-content">
+            <img id="lightboxImg" src="" alt="">
+            <div class="lightbox-info">
+                <h3 id="lightboxTitle"></h3>
+                <p id="lightboxDescription"></p>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Extended image gallery with 24 diverse images
+        const imageData = [
+            // Nature Images
+            {
+                id: 1,
+                src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=500&fit=crop',
+                title: 'Mountain Lake',
+                description: 'Beautiful mountain lake reflection',
+                category: 'nature'
+            },
+            {
+                id: 2,
+                src: 'https://images.unsplash.com/photo-1441974231531-c6227db76b6e?w=500&h=500&fit=crop',
+                title: 'Forest Path',
+                description: 'Peaceful forest walkway',
+                category: 'nature'
+            },
+            {
+                id: 3,
+                src: 'https://images.unsplash.com/photo-1470071459604-3b5ec3a7fe05?w=500&h=500&fit=crop',
+                title: 'Sunset Valley',
+                description: 'Golden hour in the valley',
+                category: 'nature'
+            },
+            {
+                id: 4,
+                src: 'https://images.unsplash.com/photo-1506197603052-3cc9c3a201bd?w=500&h=500&fit=crop',
+                title: 'Ocean Waves',
+                description: 'Powerful ocean waves crashing',
+                category: 'nature'
+            },
+            {
+                id: 5,
+                src: 'https://images.unsplash.com/photo-1464822759844-d150baec93e5?w=500&h=500&fit=crop',
+                title: 'Desert Dunes',
+                description: 'Endless golden sand dunes',
+                category: 'nature'
+            },
+
+            // Cities
+            {
+                id: 6,
+                src: 'https://images.unsplash.com/photo-1519501025264-65ba15a82390?w=500&h=500&fit=crop',
+                title: 'City Skyline',
+                description: 'Urban cityscape at night',
+                category: 'city'
+            },
+            {
+                id: 7,
+                src: 'https://images.unsplash.com/photo-1449824913935-59a10b8d2000?w=500&h=500&fit=crop',
+                title: 'City Streets',
+                description: 'Busy urban intersection',
+                category: 'city'
+            },
+            {
+                id: 8,
+                src: 'https://images.unsplash.com/photo-1480714378408-67cf0d13bc1f?w=500&h=500&fit=crop',
+                title: 'New York City',
+                description: 'Manhattan skyscrapers and lights',
+                category: 'city'
+            },
+            {
+                id: 9,
+                src: 'https://images.unsplash.com/photo-1513475382585-d06e58bcb0e0?w=500&h=500&fit=crop',
+                title: 'Tokyo Streets',
+                description: 'Neon lights of Tokyo at night',
+                category: 'city'
+            },
+            {
+                id: 10,
+                src: 'https://images.unsplash.com/photo-1502602898536-47ad22581b52?w=500&h=500&fit=crop',
+                title: 'Dubai Marina',
+                description: 'Modern Dubai waterfront skyline',
+                category: 'city'
+            },
+
+            // Sports (Cricket Stadiums & Others)
+            {
+                id: 11,
+                src: 'https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=500&h=500&fit=crop',
+                title: 'Cricket Stadium',
+                description: 'Massive cricket stadium filled with fans',
+                category: 'sports'
+            },
+            {
+                id: 12,
+                src: 'https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=500&h=500&fit=crop',
+                title: 'Football Stadium',
+                description: 'Modern football stadium architecture',
+                category: 'sports'
+            },
+            {
+                id: 13,
+                src: 'https://images.unsplash.com/photo-1551698618-1dfe5d97d256?w=500&h=500&fit=crop',
+                title: 'Tennis Court',
+                description: 'Professional tennis court from above',
+                category: 'sports'
+            },
+            {
+                id: 14,
+                src: 'https://images.unsplash.com/photo-1461896836934-ffe607ba8211?w=500&h=500&fit=crop',
+                title: 'Basketball Court',
+                description: 'Indoor basketball arena',
+                category: 'sports'
+            },
+
+            // Famous Landmarks
+            {
+                id: 15,
+                src: 'https://images.unsplash.com/photo-1511739001486-6bfe10ce785f?w=500&h=500&fit=crop',
+                title: 'Eiffel Tower',
+                description: 'Iconic Eiffel Tower in Paris',
+                category: 'landmarks'
+            },
+            {
+                id: 16,
+                src: 'https://images.unsplash.com/photo-1539650116574-75c0c6d73f6e?w=500&h=500&fit=crop',
+                title: 'Taj Mahal',
+                description: 'Magnificent Taj Mahal at sunrise',
+                category: 'landmarks'
+            },
+            {
+                id: 17,
+                src: 'https://images.unsplash.com/photo-1513326738677-b964603b136d?w=500&h=500&fit=crop',
+                title: 'Great Wall',
+                description: 'Great Wall of China winding through mountains',
+                category: 'landmarks'
+            },
+            {
+                id: 18,
+                src: 'https://images.unsplash.com/photo-1539037116277-4db20889f2d4?w=500&h=500&fit=crop',
+                title: 'Statue of Liberty',
+                description: 'Statue of Liberty against blue sky',
+                category: 'landmarks'
+            },
+            {
+                id: 19,
+                src: 'https://images.unsplash.com/photo-1525874684015-58379d421a52?w=500&h=500&fit=crop',
+                title: 'Big Ben',
+                description: 'Big Ben clock tower in London',
+                category: 'landmarks'
+            },
+
+            // Villages & Rural Areas
+            {
+                id: 20,
+                src: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=500&h=500&fit=crop',
+                title: 'Alpine Village',
+                description: 'Charming village in the Alps',
+                category: 'villages'
+            },
+            {
+                id: 21,
+                src: 'https://images.unsplash.com/photo-1492571350019-22de08371fd3?w=500&h=500&fit=crop',
+                title: 'Tuscan Village',
+                description: 'Rolling hills of Tuscany with village',
+                category: 'villages'
+            },
+            {
+                id: 22,
+                src: 'https://images.unsplash.com/photo-1477959858617-67f85cf4f1df?w=500&h=500&fit=crop',
+                title: 'Santorini Village',
+                description: 'White buildings of Santorini Greece',
+                category: 'villages'
+            },
+            {
+                id: 23,
+                src: 'https://images.unsplash.com/photo-1528543606781-2f6e6857f318?w=500&h=500&fit=crop',
+                title: 'Rural Farm',
+                description: 'Peaceful countryside farmland',
+                category: 'villages'
+            },
+
+            // People
+            {
+                id: 24,
+                src: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=500&h=500&fit=crop',
+                title: 'Portrait',
+                description: 'Professional portrait photography',
+                category: 'people'
+            }
+        ];
+
+        // Gallery state
+        let currentFilter = 'all';
+        let currentPage = 0;
+        let itemsPerPage = 6;
+        let currentImages = [...imageData];
+        let currentLightboxIndex = 0;
+
+        // DOM elements
+        const gallery = document.getElementById('gallery');
+        const loading = document.getElementById('loading');
+        const filterButtons = document.querySelectorAll('.filter-btn');
+        const searchInput = document.getElementById('searchInput');
+        const prevPageBtn = document.getElementById('prevPage');
+        const nextPageBtn = document.getElementById('nextPage');
+        const lightbox = document.getElementById('lightbox');
+        const lightboxImg = document.getElementById('lightboxImg');
+        const lightboxTitle = document.getElementById('lightboxTitle');
+        const lightboxDescription = document.getElementById('lightboxDescription');
+        const lightboxClose = document.getElementById('lightboxClose');
+        const lightboxPrev = document.getElementById('lightboxPrev');
+        const lightboxNext = document.getElementById('lightboxNext');
+
+        // Initialize gallery
+        function init() {
+            setTimeout(() => {
+                loading.classList.add('hidden');
+                renderGallery();
+                setupEventListeners();
+            }, 1000);
+        }
+
+        // Render gallery
+        function renderGallery() {
+            const startIndex = currentPage * itemsPerPage;
+            const endIndex = startIndex + itemsPerPage;
+            const imagesToShow = currentImages.slice(startIndex, endIndex);
+
+            gallery.innerHTML = imagesToShow.map((image, index) => `
+                <div class="gallery-item" data-id="${image.id}" data-index="${startIndex + index}">
+                    <img src="${image.src}" alt="${image.title}" loading="lazy">
+                    <div class="overlay">
+                        <h3>${image.title}</h3>
+                        <p>${image.description}</p>
+                    </div>
+                </div>
+            `).join('');
+
+            updateNavigationButtons();
+        }
+
+        // Filter images
+        function filterImages(category) {
+            currentFilter = category;
+            currentPage = 0;
+            
+            if (category === 'all') {
+                currentImages = [...imageData];
+            } else {
+                currentImages = imageData.filter(img => img.category === category);
+            }
+            
+            const searchTerm = searchInput.value.toLowerCase();
+            if (searchTerm) {
+                currentImages = currentImages.filter(img => 
+                    img.title.toLowerCase().includes(searchTerm) || 
+                    img.description.toLowerCase().includes(searchTerm)
+                );
+            }
+            
+            renderGallery();
+        }
+
+        // Search images
+        function searchImages(query) {
+            const searchTerm = query.toLowerCase();
+            currentPage = 0;
+            
+            let filteredByCategory = currentFilter === 'all' ? 
+                [...imageData] : 
+                imageData.filter(img => img.category === currentFilter);
+            
+            if (searchTerm) {
+                currentImages = filteredByCategory.filter(img => 
+                    img.title.toLowerCase().includes(searchTerm) || 
+                    img.description.toLowerCase().includes(searchTerm)
+                );
+            } else {
+                currentImages = filteredByCategory;
+            }
+            
+            renderGallery();
+        }
+
+        // Update navigation buttons
+        function updateNavigationButtons() {
+            const totalPages = Math.ceil(currentImages.length / itemsPerPage);
+            prevPageBtn.disabled = currentPage === 0;
+            nextPageBtn.disabled = currentPage >= totalPages - 1;
+        }
+
+        // Open lightbox
+        function openLightbox(imageIndex) {
+            const imageInCurrentView = currentImages[imageIndex];
+            const globalIndex = imageData.findIndex(img => img.id === imageInCurrentView.id);
+            
+            currentLightboxIndex = globalIndex;
+            lightboxImg.src = imageData[currentLightboxIndex].src;
+            lightboxTitle.textContent = imageData[currentLightboxIndex].title;
+            lightboxDescription.textContent = imageData[currentLightboxIndex].description;
+            lightbox.style.display = 'block';
+            document.body.style.overflow = 'hidden';
+        }
+
+        // Close lightbox
+        function closeLightbox() {
+            lightbox.style.display = 'none';
+            document.body.style.overflow = 'auto';
+        }
+
+        // Navigate lightbox
+        function navigateLightbox(direction) {
+            if (direction === 'next') {
+                currentLightboxIndex = (currentLightboxIndex + 1) % imageData.length;
+            } else {
+                currentLightboxIndex = currentLightboxIndex === 0 ? 
+                    imageData.length - 1 : currentLightboxIndex - 1;
+            }
+            
+            lightboxImg.src = imageData[currentLightboxIndex].src;
+            lightboxTitle.textContent = imageData[currentLightboxIndex].title;
+            lightboxDescription.textContent = imageData[currentLightboxIndex].description;
+        }
+
+        // Setup event listeners
+        function setupEventListeners() {
+            // Filter buttons
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    filterImages(btn.dataset.filter);
+                });
+            });
+
+            // Search input
+            searchInput.addEventListener('input', (e) => {
+                searchImages(e.target.value);
+            });
+
+            // Pagination
+            prevPageBtn.addEventListener('click', () => {
+                if (currentPage > 0) {
+                    currentPage--;
+                    renderGallery();
+                }
+            });
+
+            nextPageBtn.addEventListener('click', () => {
+                const totalPages = Math.ceil(currentImages.length / itemsPerPage);
+                if (currentPage < totalPages - 1) {
+                    currentPage++;
+                    renderGallery();
+                }
+            });
+
+            // Gallery item clicks
+            gallery.addEventListener('click', (e) => {
+                const galleryItem = e.target.closest('.gallery-item');
+                if (galleryItem) {
+                    const index = parseInt(galleryItem.dataset.index) - (currentPage * itemsPerPage);
+                    openLightbox(index);
+                }
+            });
+
+            // Lightbox controls
+            lightboxClose.addEventListener('click', closeLightbox);
+            lightboxPrev.addEventListener('click', () => navigateLightbox('prev'));
+            lightboxNext.addEventListener('click', () => navigateLightbox('next'));
+
+            // Lightbox keyboard navigation
+            document.addEventListener('keydown', (e) => {
+                if (lightbox.style.display === 'block') {
+                    switch(e.key) {
+                        case 'Escape':
+                            closeLightbox();
+                            break;
+                        case 'ArrowLeft':
+                            navigateLightbox('prev');
+                            break;
+                        case 'ArrowRight':
+                            navigateLightbox('next');
+                            break;
+                    }
+                }
+            });
+
+            // Close lightbox on background click
+            lightbox.addEventListener('click', (e) => {
+                if (e.target === lightbox) {
+                    closeLightbox();
+                }
+            });
+        }
+
+        // Initialize the gallery
+        init();
+    </script>
+</body>
+</html>
